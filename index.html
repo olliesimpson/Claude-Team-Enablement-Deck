@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude, Properly · Team Enablement · Unusual Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --jet:#0E0E0E; --charcoal:#2F2F2F; --stone:#DDD8D2; --white:#FFFFFF;
+  --orange:#FA6B13; --yellow:#FFB813; --muted:#666666;
+  --font:'DM Sans',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--jet);font-family:var(--font);}
+.deck{position:relative;width:100vw;height:100vh;}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;padding:6vh 7vw;opacity:0;}
+.slide.active{display:flex;opacity:1;animation:fadeIn .35s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* Slide backgrounds */
+.dark{background:var(--jet);color:var(--white);}
+.light{background:var(--white);color:var(--jet);}
+.stone{background:var(--stone);color:var(--jet);}
+
+/* Progress + chrome */
+.progress{position:fixed;top:0;left:0;height:5px;background:var(--orange);width:0%;z-index:50;transition:width .25s;}
+.counter{position:fixed;bottom:1.4rem;right:1.8rem;font-size:.75rem;letter-spacing:.08em;color:#888;z-index:50;font-weight:600;}
+.navbtns{position:fixed;bottom:1.1rem;left:1.8rem;z-index:50;display:flex;gap:.5rem;}
+.navbtns button{font-family:var(--font);background:none;border:1px solid #555;color:#888;width:38px;height:38px;font-size:1rem;cursor:pointer;transition:all .2s;}
+.navbtns button:hover{border-color:var(--orange);color:var(--orange);}
+.light.active ~ .navbtns button{border-color:#ccc;}
+
+/* Type */
+.kicker{font-size:.8rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--orange);margin-bottom:1.6rem;}
+.anchor-line{font-size:clamp(3.2rem,8.5vw,7.5rem);font-weight:700;line-height:1.02;letter-spacing:-.02em;}
+h2.big{font-size:clamp(2rem,4.5vw,3.6rem);font-weight:700;line-height:1.08;letter-spacing:-.01em;margin-bottom:1.6rem;max-width:22ch;}
+.sub{font-size:clamp(1.05rem,1.8vw,1.4rem);font-weight:400;line-height:1.5;max-width:52ch;color:inherit;opacity:.85;margin-top:1.4rem;}
+.dark .sub{color:#CFCAC4;opacity:1;}
+.acc{color:var(--orange);}
+p.body{font-size:clamp(1rem,1.5vw,1.25rem);line-height:1.6;max-width:60ch;margin-bottom:1rem;}
+.small-note{font-size:.85rem;color:var(--muted);margin-top:2rem;}
+.dark .small-note{color:#888;}
+
+/* Badges */
+.badge{position:absolute;top:5vh;right:7vw;font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.55rem 1.1rem;}
+.badge.demo{background:var(--orange);color:var(--white);}
+.badge.hands{background:var(--jet);color:var(--white);}
+.stone .badge.hands{background:var(--jet);}
+.badge.guide{background:none;border:2px solid var(--orange);color:var(--orange);}
+
+/* Footer strip */
+.slidefoot{position:absolute;bottom:1.55rem;left:0;right:0;display:flex;justify-content:center;gap:2.5rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#999;font-weight:600;}
+.dark .slidefoot,.stone .slidefoot{color:#8a8a8a;}
+.slidefoot .fdot{color:var(--orange);}
+
+/* Timing chip on anchor slides */
+.timechip{display:inline-block;margin-top:2.2rem;font-size:.85rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border:2px solid var(--orange);color:var(--orange);padding:.55rem 1.2rem;}
+
+/* Logo */
+.logo-corner{position:absolute;top:5vh;left:7vw;height:26px;}
+.logo-corner svg{height:26px;width:auto;display:block;}
+.light .logo-corner svg path,.stone .logo-corner svg path{fill:var(--jet);}
+
+/* U mark decoration */
+.umark{position:absolute;right:-4vw;bottom:-8vh;width:34vw;opacity:.14;pointer-events:none;}
+.umark svg{width:100%;height:auto;display:block;}
+.umark svg path{fill:var(--orange);}
+
+/* Cards & grids */
+.grid{display:grid;gap:1.2rem;margin-top:1rem;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:1fr 1fr 1fr;}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.card{border:1px solid #E2DFDA;padding:1.6rem;background:var(--white);}
+.stone .card{border-color:#C9C4BD;}
+.card h3{font-size:1.05rem;font-weight:700;margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem;}
+.card h3::before{content:'';width:10px;height:10px;background:var(--orange);flex-shrink:0;}
+.card p{font-size:.92rem;line-height:1.55;color:#3a3a3a;}
+.card.dark-card{background:var(--jet);border-color:var(--jet);}
+.card.dark-card p{color:#CFCAC4;}
+.card.dark-card h3{color:var(--white);}
+
+/* Map slide */
+.map-row{display:flex;align-items:center;gap:1.2rem;padding:.85rem 0;border-bottom:1px solid #E5E2DD;}
+.map-num{font-size:.85rem;font-weight:700;color:var(--orange);width:2.2rem;letter-spacing:.05em;}
+.map-name{font-size:clamp(1rem,1.7vw,1.35rem);font-weight:600;flex:1;}
+.map-time{font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.map-row.break-row .map-name{color:var(--muted);font-weight:400;}
+
+/* Before / after */
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1rem;}
+.ba-col{padding:1.5rem;font-size:.9rem;line-height:1.6;}
+.ba-col .ba-tag{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:.8rem;}
+.ba-before{background:#F4F2EF;color:#555;}
+.ba-before .ba-tag{color:#999;}
+.ba-after{background:var(--jet);color:#EDEAE6;}
+.ba-after .ba-tag{color:var(--orange);}
+
+/* Prompt block */
+.promptblock{background:var(--jet);color:#EDEAE6;padding:1.5rem 1.8rem;font-size:clamp(.95rem,1.4vw,1.15rem);line-height:1.6;margin-top:1.4rem;max-width:70ch;position:relative;}
+.promptblock::before{content:'PROMPT';position:absolute;top:-0.7rem;left:1.2rem;background:var(--orange);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.18em;padding:.25rem .7rem;}
+.light .promptblock{box-shadow:none;}
+
+/* Steps */
+.steps{margin-top:1.4rem;display:flex;flex-direction:column;gap:1rem;max-width:60ch;}
+.step{display:flex;gap:1.1rem;align-items:flex-start;}
+.step-n{width:2.1rem;height:2.1rem;background:var(--orange);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.95rem;}
+.step p{font-size:clamp(.95rem,1.5vw,1.15rem);line-height:1.5;padding-top:.25rem;}
+
+/* Rule chips (example lists) */
+.chips{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.6rem;max-width:75ch;}
+.chip{font-size:.88rem;font-weight:600;padding:.6rem 1rem;border:1px solid #D8D4CE;}
+.chip b{color:var(--orange);font-weight:700;}
+
+/* List with orange squares */
+ul.sq{list-style:none;margin-top:1rem;max-width:60ch;}
+ul.sq li{position:relative;padding-left:1.6rem;font-size:clamp(1rem,1.5vw,1.2rem);line-height:1.55;margin-bottom:.9rem;}
+ul.sq li::before{content:'';position:absolute;left:0;top:.5em;width:10px;height:10px;background:var(--orange);}
+.dark ul.sq li{color:#E5E1DC;}
+
+.room{border:3px solid var(--jet);padding:1.6rem;max-width:640px;margin-top:1.2rem;position:relative;}
+.room-label{position:absolute;top:-0.8rem;left:1.2rem;background:var(--white);padding:0 .6rem;font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);}
+.room-items{display:flex;flex-wrap:wrap;gap:.6rem;}
+.room-items span{background:#F4F2EF;padding:.5rem .9rem;font-size:.85rem;font-weight:600;}
+.outside{margin-top:1rem;font-size:.85rem;color:var(--muted);max-width:640px;}
+
+@media (max-width:900px){.g3,.g4{grid-template-columns:1fr 1fr;}.ba{grid-template-columns:1fr;}}
+@media (max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr;}.slide{padding:8vh 6vw;}.badge{top:2.5vh;}}
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<div class="deck" id="deck">
+
+<!-- 1 · TITLE -->
+<section class="slide dark">
+  <div class="logo-corner"><svg viewBox="0 0 600 104" xmlns="http://www.w3.org/2000/svg"><path d="M206.967 79.8997C202.528 86.1882 195.777 89.9798 186.529 89.9798C174.137 89.9798 163.78 82.7665 163.78 66.3978V23.7653H180.888V61.9588C180.888 72.4089 185.235 76.108 193.003 76.108C200.124 76.108 206.782 70.4669 206.782 58.9071V23.7653H223.798V88.5002H207.43V79.8997H206.967Z" fill="#fff"/><path d="M247.935 32.3673C252.374 26.0787 259.125 22.2871 268.373 22.2871C280.765 22.2871 291.122 29.5004 291.122 45.8691V88.5017H274.014V50.3081C274.014 39.858 269.667 36.1589 261.899 36.1589C254.778 36.1589 248.12 41.8001 248.12 53.3599V88.5941H231.011V23.8592H247.38V32.3673H247.935Z" fill="#fff"/><path d="M341.153 79.8997C336.714 86.1882 329.963 89.9798 320.715 89.9798C308.323 89.9798 297.965 82.7665 297.965 66.3978V23.7653H315.074V61.9588C315.074 72.4089 319.42 76.108 327.188 76.108C334.309 76.108 340.968 70.4669 340.968 58.9071V23.7653H358.076V88.5002H341.708V79.8997H341.153Z" fill="#fff"/><path d="M403.668 43.3722C402.281 36.9912 397.195 33.662 390.906 33.662C384.71 33.662 380.364 36.3438 380.364 41.3377C380.364 46.0541 385.08 47.3488 391.739 48.4585L398.397 49.4758C409.957 51.4178 421.239 54.932 421.239 69.3586C421.239 83.5078 408.385 90.0738 391.554 90.0738C374.63 90.0738 362.978 82.3056 360.758 69.7285L376.757 67.4166C378.329 75.0923 383.785 78.6989 391.739 78.6989C398.952 78.6989 403.853 75.4622 403.853 70.0985C403.853 65.4745 398.952 63.7174 391.646 62.4227L384.525 61.313C374.168 59.6484 363.163 55.9493 363.163 42.0775C363.163 29.7779 375.74 22.2871 390.906 22.2871C405.98 22.2871 417.448 29.9628 419.482 41.1527L403.668 43.3722Z" fill="#fff"/><path d="M467.941 79.8997C463.502 86.1882 456.751 89.9798 447.503 89.9798C435.111 89.9798 424.754 82.7665 424.754 66.3978V23.7653H441.862V61.9588C441.862 72.4089 446.209 76.108 453.977 76.108C461.098 76.108 467.756 70.4669 467.756 58.9071V23.7653H484.865V88.5002H468.496V79.8997H467.941Z" fill="#fff"/><path d="M533.323 88.5018C532.213 87.2071 531.473 83.8779 531.473 79.5314C527.682 86.4673 518.804 90.074 510.111 90.074C498.736 90.074 488.563 82.9531 488.563 70.9309C488.563 57.0592 498.366 51.7879 515.382 49.8459C528.144 48.3662 531.381 46.4241 531.381 42.5401C531.381 37.7312 527.867 34.5869 520.099 34.5869C514.18 34.5869 508.909 37.7312 506.874 44.2047L491.06 41.8002C493.927 29.5931 505.302 22.3798 520.561 22.3798C540.074 22.3798 548.489 30.9803 548.489 43.2799V75.5548C548.489 82.3058 548.582 85.9124 550.247 88.5943H533.323V88.5018ZM531.381 56.5968C529.346 58.3539 523.613 59.1862 517.324 60.111C511.036 61.0357 505.949 63.995 505.949 70.0061C505.949 75.2774 509.556 78.2367 515.29 78.2367C522.133 78.2367 531.381 74.0752 531.381 63.3477V56.5968Z" fill="#fff"/><path d="M572.719 -0.00109863V88.5007H555.611V-0.00109863H572.719Z" fill="#fff"/><path d="M580.117 78.9754C580.117 73.5192 584.556 69.0802 590.012 69.0802C595.469 69.0802 599.908 73.5192 599.908 78.9754C599.908 84.4316 595.469 88.8706 590.012 88.8706C584.556 88.9631 580.117 84.5241 580.117 78.9754ZM598.15 78.9754C598.15 74.5364 594.544 70.9298 590.105 70.9298C585.666 70.9298 582.059 74.5364 582.059 78.9754C582.059 83.4144 585.666 87.021 590.105 87.021C594.544 87.021 598.15 83.5068 598.15 78.9754ZM594.636 80.455C594.266 82.3971 592.602 84.0617 590.105 84.0617C587.33 84.0617 585.388 82.2121 585.388 79.0679C585.388 75.9236 587.33 74.074 590.105 74.074C592.509 74.074 594.174 75.5537 594.544 77.2183L592.047 77.4957C591.769 76.6634 591.122 76.0161 590.105 76.0161C588.903 76.0161 587.885 76.8484 587.885 79.0679C587.885 81.2874 588.903 82.1197 590.105 82.1197C591.215 82.1197 591.862 81.3798 592.139 80.2701L594.636 80.455Z" fill="#fff"/><path d="M122.441 1.2926V62.6983H95.5301C87.9469 62.6983 81.7508 68.8943 81.7508 76.4776V103.481H-0.00012207V1.2926H40.8753V62.6058H67.879C75.4623 62.6058 81.6583 56.4097 81.6583 48.8265V1.2926H122.441Z" fill="#fff"/></svg></div>
+  <div class="umark"><svg viewBox="0 0 123 104" xmlns="http://www.w3.org/2000/svg"><path d="M122.441 1.2926V62.6983H95.5301C87.9469 62.6983 81.7508 68.8943 81.7508 76.4776V103.481H-0.00012207V1.2926H40.8753V62.6058H67.879C75.4623 62.6058 81.6583 56.4097 81.6583 48.8265V1.2926H122.441Z"/></svg></div>
+  <div class="kicker">Team Enablement · AI Workshop Series</div>
+  <div class="anchor-line">Claude,<br>properly<span class="acc">.</span></div>
+  <p class="sub">Two hours that change how your team works. Part theory, part practical, all of it usable tomorrow morning.</p>
+  <p class="small-note">Use the arrow keys to move through the deck.</p>
+</section>
+
+<!-- 2 · WATCH THIS -->
+<section class="slide dark">
+  <div class="badge demo">Live Demo</div>
+  <div class="anchor-line">Watch this<span class="acc">.</span></div>
+  <p class="sub">A rough client call transcript goes in. A structured, client-ready follow-up comes out. In your format, in your voice. Three minutes, start to finish.</p>
+  <div class="slidefoot"><span>Opening</span><span class="fdot">■</span><span>Everything gets explained by the end</span></div>
+</section>
+
+<!-- 3 · THE PROMISE -->
+<section class="slide light">
+  <h2 class="big">By the end of this session, you will understand every part of what just happened.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>What ran</h3><p>A skill: a saved, repeatable way of doing a task, built once and used forever.</p></div>
+    <div class="card"><h3>What fed it</h3><p>Context: your template, your tone of voice, your client's history. Claude had an induction before it started.</p></div>
+    <div class="card"><h3>Where it ran</h3><p>Cowork Mode: the side of Claude that produces finished work, not just conversation.</p></div>
+  </div>
+  <p class="small-note">Nothing you will see today needs a technical background. If you can brief a colleague, you can do all of it.</p>
+  <div class="slidefoot"><span>Opening</span></div>
+</section>
+
+<!-- 4 · PENS DOWN -->
+<section class="slide dark">
+  <div class="anchor-line">Put your pens down<span class="acc">.</span></div>
+  <p class="sub">Everything in this session exists as a written guide, and you will get it straight after we finish. Every prompt on these slides is in there, copy-ready. So don't take notes. Watch, ask questions, and think about your own clients.</p>
+  <div class="slidefoot"><span>Opening</span></div>
+</section>
+
+<!-- 5 · THE MAP -->
+<section class="slide light">
+  <h2 class="big">Where we're going<span class="acc">.</span></h2>
+  <div>
+    <div class="map-row"><span class="map-num">01</span><span class="map-name">How Claude thinks</span><span class="map-time">15 min</span></div>
+    <div class="map-row"><span class="map-num">02</span><span class="map-name">Chat vs Cowork</span><span class="map-time">20 min</span></div>
+    <div class="map-row"><span class="map-num">03</span><span class="map-name">Projects: giving Claude an induction</span><span class="map-time">20 min</span></div>
+    <div class="map-row break-row"><span class="map-num">·</span><span class="map-name">Break</span><span class="map-time">5 min</span></div>
+    <div class="map-row"><span class="map-num">04</span><span class="map-name">Prompting: the brief</span><span class="map-time">15 min</span></div>
+    <div class="map-row"><span class="map-num">05</span><span class="map-name">Skills &amp; scheduled tasks</span><span class="map-time">20 min</span></div>
+    <div class="map-row"><span class="map-num">06</span><span class="map-name">Staying safe</span><span class="map-time">10 min</span></div>
+    <div class="map-row"><span class="map-num">07</span><span class="map-name">Your first move</span><span class="map-time">5 min</span></div>
+  </div>
+  <div class="slidefoot"><span>Opening</span></div>
+</section>
+
+<!-- 6 · ANCHOR: ONE CHAT ONE JOB -->
+<section class="slide dark">
+  <div class="kicker">Part 01 · How Claude thinks</div>
+  <div class="anchor-line">One chat,<br>one job<span class="acc">.</span></div>
+  <div><span class="timechip">15 minutes</span></div>
+</section>
+
+<!-- 7 · THE ROOM -->
+<section class="slide light">
+  <h2 class="big">Claude can only see what's in the room.</h2>
+  <div class="room">
+    <div class="room-label">In the room</div>
+    <div class="room-items">
+      <span>Your message</span><span>Files you've uploaded</span><span>The Project's instructions</span><span>Everything said in this conversation</span>
+    </div>
+  </div>
+  <p class="outside">Not in the room: your other chats, last week's thread, your Drive, your inbox, anything you haven't shown it. Claude is not being difficult. The room is all there is.</p>
+  <p class="body" style="margin-top:1.4rem;"><strong>What's in the room is called context.</strong> Every technique in this session is really one idea: get the right things into the room.</p>
+  <div class="slidefoot"><span>01 · How Claude thinks</span><span class="fdot">■</span><span>Guide · 03 Models, Limits &amp; Settings</span></div>
+</section>
+
+<!-- 8 · LONG THREAD TAX -->
+<section class="slide light">
+  <h2 class="big">Every message re-reads the entire conversation.</h2>
+  <div class="ba">
+    <div class="ba-col ba-after"><div class="ba-tag">Message 5</div>Sharp, focused, cheap. The room contains exactly what matters and nothing else.</div>
+    <div class="ba-col ba-before"><div class="ba-tag">Message 50</div>Slow, drifting, expensive. The room is full of dead ends, old drafts and abandoned directions, and Claude weighs all of it.</div>
+  </div>
+  <p class="body" style="margin-top:1.6rem;">Long threads don't just cost more. They think worse. We call it the long thread tax, and most people pay it daily without knowing.</p>
+  <div class="slidefoot"><span>01 · How Claude thinks</span><span class="fdot">■</span><span>Guide · 03 Models, Limits &amp; Settings</span></div>
+</section>
+
+<!-- 9 · FRESH CHATS -->
+<section class="slide light">
+  <div class="badge demo">Live Demo</div>
+  <h2 class="big">The fix costs nothing: start fresh.</h2>
+  <ul class="sq">
+    <li><strong>One chat, one job.</strong> When the job is done, leave the thread. It owes you nothing.</li>
+    <li><strong>Don't argue with a tired thread.</strong> If it has drifted, no amount of "no, try again" saves it. Restart with a better brief.</li>
+    <li><strong>Moving on? Take a handover.</strong> Ask the old chat to brief the new one:</li>
+  </ul>
+  <div class="promptblock">Summarise this conversation as a handover briefing for a new chat: what we are working on, the decisions made so far, and what happens next.</div>
+  <div class="slidefoot"><span>01 · How Claude thinks</span><span class="fdot">■</span><span>Guide · 03 Models, Limits &amp; Settings</span></div>
+</section>
+
+<!-- 10 · ANCHOR: RIGHT TOOL -->
+<section class="slide dark">
+  <div class="kicker">Part 02 · Chat vs Cowork</div>
+  <div class="anchor-line">Right tool,<br>right job<span class="acc">.</span></div>
+  <div><span class="timechip">20 minutes</span></div>
+</section>
+
+<!-- 11 · TWO MODES -->
+<section class="slide light">
+  <h2 class="big">One app. Two very different colleagues.</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Chat Mode: thinking together</h3><p>Drafting, research, reviewing, arguing a strategy through. Lives in conversation. This is where your team's shared Projects are, so every chat starts with the client context already loaded.</p></div>
+    <div class="card dark-card"><h3>Cowork Mode: doing the work</h3><p>Works with the files on your computer, runs skills, sets up scheduled tasks, and produces finished documents rather than chat replies. Local to your machine.</p></div>
+  </div>
+  <div class="slidefoot"><span>02 · Chat vs Cowork</span><span class="fdot">■</span><span>Guide · 02 Which Interface, When</span></div>
+</section>
+
+<!-- 12 · THE RULE -->
+<section class="slide light">
+  <h2 class="big">Talking about the work? <span class="acc">Chat.</span><br>Producing the work? <span class="acc">Cowork.</span></h2>
+  <div class="chips">
+    <span class="chip">Draft a tricky client email → <b>Chat</b></span>
+    <span class="chip">Turn 40 files into one report → <b>Cowork</b></span>
+    <span class="chip">Pressure-test a strategy → <b>Chat</b></span>
+    <span class="chip">Build a skill → <b>Cowork</b></span>
+    <span class="chip">Rework a proposal's narrative → <b>Chat</b></span>
+    <span class="chip">"Every Monday, brief me" → <b>Cowork</b></span>
+  </div>
+  <p class="small-note">Not a law, a default. You'll develop a feel for the exceptions within a week.</p>
+  <div class="slidefoot"><span>02 · Chat vs Cowork</span><span class="fdot">■</span><span>Guide · 02 Which Interface, When</span></div>
+</section>
+
+<!-- 13 · QUIZ -->
+<section class="slide stone">
+  <div class="badge guide">Guide Moment</div>
+  <h2 class="big">Three situations. You call it.</h2>
+  <p class="body">We'll run the Chat vs Cowork quiz from your guide, live. For each situation: hands up for Chat, hands up for Cowork. Majority is not always right, which is rather the point.</p>
+  <p class="small-note">This exact quiz is in your guide, so you can retake it whenever the distinction goes fuzzy.</p>
+  <div class="slidefoot"><span>02 · Chat vs Cowork</span><span class="fdot">■</span><span>Guide · 02 Which Interface, When</span></div>
+</section>
+
+<!-- 14 · DEMO BOTH MODES -->
+<section class="slide dark">
+  <div class="badge demo">Live Demo</div>
+  <div class="anchor-line">Same task.<br>Both modes<span class="acc">.</span></div>
+  <p class="sub">One request, run in Chat and then in Cowork. Watch what each gives back, and how differently they get there.</p>
+  <div class="slidefoot"><span>02 · Chat vs Cowork</span></div>
+</section>
+
+<!-- 15 · ANCHOR: CONTEXT IS KING -->
+<section class="slide dark">
+  <div class="kicker">Part 03 · Projects</div>
+  <div class="anchor-line">Context<br>is king<span class="acc">.</span></div>
+  <div><span class="timechip">20 minutes</span></div>
+</section>
+
+<!-- 16 · DAY ONE FREELANCER -->
+<section class="slide light">
+  <h2 class="big">Claude is the most talented freelancer you've never onboarded.</h2>
+  <p class="body">No brand voice. No client history. No formats, no rates, no house rules. So it does what any freelancer would do on day one with no induction: something generic.</p>
+  <p class="body"><strong>Generic in, generic out.</strong> The fix is not a cleverer prompt. The fix is an induction.</p>
+  <div class="slidefoot"><span>03 · Projects</span><span class="fdot">■</span><span>Guide · 04 Projects in Depth</span></div>
+</section>
+
+<!-- 17 · ANATOMY -->
+<section class="slide light">
+  <h2 class="big">A Project is an induction that never expires.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Instructions</h3><p>How to behave in this Project: the client, the voice, the rules, the things it must never do. Written once.</p></div>
+    <div class="card"><h3>Knowledge</h3><p>The documents that matter: brand guidelines, briefs, rate cards, your best past work. Uploaded once.</p></div>
+    <div class="card"><h3>Chats</h3><p>Every conversation inside the Project starts with all of the above already in the room. Day 100, not day one.</p></div>
+  </div>
+  <p class="small-note">Shared Projects live in Chat Mode, so one person's setup becomes the whole team's advantage.</p>
+  <div class="slidefoot"><span>03 · Projects</span><span class="fdot">■</span><span>Guide · 04 Projects in Depth</span></div>
+</section>
+
+<!-- 18 · FIELDWORKS DEMO -->
+<section class="slide light">
+  <div class="badge demo">Live Demo</div>
+  <h2 class="big">The same one-line request, twice.</h2>
+  <div class="ba">
+    <div class="ba-col ba-before"><div class="ba-tag">Without the Project</div>Polite, competent, generic. Wrong tone, invented pricing, exclamation marks everywhere. Reads like it was written for anyone, because it was.</div>
+    <div class="ba-col ba-after"><div class="ba-tag">With the Project</div>On voice, right price, references the live brief. The kind of draft you edit for two minutes rather than rewrite from scratch.</div>
+  </div>
+  <p class="small-note">Same prompt, same model. The difference is everything the Project already knew. This exact example, agency and all, is in your guide.</p>
+  <div class="slidefoot"><span>03 · Projects</span><span class="fdot">■</span><span>Guide · 05 A Worked Example</span></div>
+</section>
+
+<!-- 19 · CLAUDE.MD -->
+<section class="slide light">
+  <h2 class="big">CLAUDE.md: the same idea, for folders.</h2>
+  <p class="body">In Cowork Mode, Claude works inside your folders. Drop a file called <strong>CLAUDE.md</strong> into a project folder and Claude reads it before touching anything: what this project is, which documents matter, what the outputs should look like.</p>
+  <p class="body">Think of it as the induction doc that lives with the work, so you never repeat yourself.</p>
+  <div class="slidefoot"><span>03 · Projects</span><span class="fdot">■</span><span>Guide · 06 CLAUDE.md</span></div>
+</section>
+
+<!-- 20 · HANDS ON 1 -->
+<section class="slide stone">
+  <div class="badge hands">Hands On</div>
+  <h2 class="big">Your turn. One real client, five minutes.</h2>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><p>Pick the client you're most actively working on right now.</p></div>
+    <div class="step"><div class="step-n">2</div><p>Create a Project for them in Chat Mode.</p></div>
+    <div class="step"><div class="step-n">3</div><p>Write three lines of instructions: who the client is, the voice, one rule.</p></div>
+    <div class="step"><div class="step-n">4</div><p>Upload one real document: a brief, a proposal, an email thread.</p></div>
+  </div>
+  <p class="small-note">A rough Project today beats a perfect one someday. You'll finish it properly using the guide.</p>
+  <div class="slidefoot"><span>03 · Projects</span><span class="fdot">■</span><span>Guide · 04 Projects in Depth</span></div>
+</section>
+
+<!-- 21 · BREAK -->
+<section class="slide dark">
+  <div class="anchor-line">Break<span class="acc">.</span></div>
+  <p class="sub">Back in five. When we return: the prompt itself, and why yours are probably underselling you.</p>
+</section>
+
+<!-- 22 · ANCHOR: PROMPT IS THE BRIEF -->
+<section class="slide dark">
+  <div class="kicker">Part 04 · Prompting</div>
+  <div class="anchor-line">The prompt<br>is the brief<span class="acc">.</span></div>
+  <div><span class="timechip">15 minutes</span></div>
+</section>
+
+<!-- 23 · MAKE IT POP -->
+<section class="slide light">
+  <h2 class="big">"Make it pop" is not a brief.</h2>
+  <p class="body">If a client sent your team a one-line email and expected finished work, you'd push back. You'd ask about audience, objectives, tone, format, deadline.</p>
+  <p class="body">A lazy prompt is that one-line email. Claude won't push back unless you ask it to. It will just do its best with nothing, and its best with nothing is mediocre.</p>
+  <div class="slidefoot"><span>04 · Prompting</span><span class="fdot">■</span><span>Guide · 07 Prompt Principles</span></div>
+</section>
+
+<!-- 24 · CONTEXT TASK CONSTRAINTS -->
+<section class="slide light">
+  <h2 class="big">Every good prompt has three parts.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Context</h3><p>What Claude needs to know: the client, the situation, the background, the audience.</p></div>
+    <div class="card"><h3>Task</h3><p>Exactly what you want done. One job, stated plainly. Not three jobs in a trench coat.</p></div>
+    <div class="card"><h3>Constraints</h3><p>Format, length, tone, what to avoid. The difference between "a draft" and "your draft".</p></div>
+  </div>
+  <p class="small-note">Context, task, constraints. Same framework as your guide, same order every time.</p>
+  <div class="slidefoot"><span>04 · Prompting</span><span class="fdot">■</span><span>Guide · 07 Prompt Principles</span></div>
+</section>
+
+<!-- 25 · HABITS -->
+<section class="slide light">
+  <div class="badge demo">Live Demo</div>
+  <h2 class="big">Habits that compound.</h2>
+  <ul class="sq">
+    <li><strong>Front-load.</strong> Everything relevant in the first message. Ten follow-up corrections cost more than one proper brief.</li>
+    <li><strong>One job per message.</strong> Bundled requests get bundled quality.</li>
+    <li><strong>On anything big, end with:</strong> "Ask me questions before you start." Claude interviews you, and the output jumps a level.</li>
+    <li><strong>Going in circles? Stop.</strong> New chat, better brief, first time.</li>
+  </ul>
+  <div class="slidefoot"><span>04 · Prompting</span><span class="fdot">■</span><span>Guide · 07 Prompt Principles</span></div>
+</section>
+
+<!-- 26 · HANDS ON 2 -->
+<section class="slide stone">
+  <div class="badge hands">Hands On</div>
+  <h2 class="big">Rewrite one of yours.</h2>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><p>Find a prompt you actually used this week. The laziest one you're willing to admit to.</p></div>
+    <div class="step"><div class="step-n">2</div><p>Rebuild it: context, task, constraints.</p></div>
+    <div class="step"><div class="step-n">3</div><p>Run both in fresh chats. Compare the outputs side by side.</p></div>
+  </div>
+  <p class="small-note">Your guide has six ready-made prompts to steal for the rest of the week.</p>
+  <div class="slidefoot"><span>04 · Prompting</span><span class="fdot">■</span><span>Guide · 07 Prompt Principles</span></div>
+</section>
+
+<!-- 27 · ANCHOR: BUILD ONCE -->
+<section class="slide dark">
+  <div class="kicker">Part 05 · Skills &amp; scheduled tasks</div>
+  <div class="anchor-line">Build once,<br>run forever<span class="acc">.</span></div>
+  <div><span class="timechip">20 minutes</span></div>
+</section>
+
+<!-- 28 · WHAT A SKILL IS -->
+<section class="slide light">
+  <h2 class="big">A skill is your best work, saved as a recipe.</h2>
+  <p class="body">Any task you do repeatedly, captured once: the steps, your template, your tone of voice, your quality bar. Then it runs on demand, the same way every time, whether it's you or the newest member of the team.</p>
+  <p class="body"><strong>The test is repetition, not frequency.</strong> Done it the same way more than twice? It's a skill waiting to be built.</p>
+  <div class="slidefoot"><span>05 · Skills &amp; scheduled tasks</span><span class="fdot">■</span><span>Guide · 08 Building Skills</span></div>
+</section>
+
+<!-- 29 · COLD OPEN EXPLAINED -->
+<section class="slide light">
+  <h2 class="big">Minute one of this session, explained.</h2>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><p>A transcript went in: raw material, no cleaning up.</p></div>
+    <div class="step"><div class="step-n">2</div><p>A skill ran: one built earlier from a note template and a tone of voice document.</p></div>
+    <div class="step"><div class="step-n">3</div><p>A client-ready follow-up came out, in the house style, in minutes.</p></div>
+  </div>
+  <p class="body" style="margin-top:1.4rem;"><strong>Nothing clever happened. Something prepared happened.</strong> That's the whole trick, and it's available to everyone in this room.</p>
+  <div class="slidefoot"><span>05 · Skills &amp; scheduled tasks</span><span class="fdot">■</span><span>Guide · 08 Building Skills</span></div>
+</section>
+
+<!-- 30 · BUILD ONE LIVE -->
+<section class="slide dark">
+  <div class="badge demo">Live Demo</div>
+  <div class="anchor-line">Let's build one now<span class="acc">.</span></div>
+  <p class="sub">With the Skill Creator, building a skill is a conversation, not a coding task. It asks questions, you answer, it builds. Watch how ordinary this is.</p>
+  <div class="slidefoot"><span>05 · Skills &amp; scheduled tasks</span><span class="fdot">■</span><span>Guide · 08 Building Skills</span></div>
+</section>
+
+<!-- 31 · SHARE -->
+<section class="slide light">
+  <h2 class="big">One person builds it. Everyone benefits.</h2>
+  <p class="body">Every skill exports as a single file you can send over Slack or email. A teammate opens it and they have your workflow, your template, your quality bar.</p>
+  <p class="body">This is how an agency's know-how compounds: the best way of doing something stops living in one person's head.</p>
+  <div class="slidefoot"><span>05 · Skills &amp; scheduled tasks</span><span class="fdot">■</span><span>Guide · 08 Building Skills</span></div>
+</section>
+
+<!-- 32 · SCHEDULED TASKS -->
+<section class="slide light">
+  <div class="badge demo">Live Demo</div>
+  <h2 class="big">If the trigger is a day of the week, not a decision, schedule it.</h2>
+  <p class="body">In Cowork, the schedule is part of the sentence. Say when, and Claude runs it without you:</p>
+  <div class="promptblock">Every Monday at 8am, prepare a briefing for my week. Check my calendar for this week's meetings, flag anything that needs preparation, and list the three things most likely to need my attention. Keep it under 300 words.</div>
+  <div class="chips">
+    <span class="chip"><b>Rule 1</b> · Draft, never send</span>
+    <span class="chip"><b>Rule 2</b> · Start with one</span>
+    <span class="chip"><b>Rule 3</b> · Review the first two runs</span>
+  </div>
+  <div class="slidefoot"><span>05 · Skills &amp; scheduled tasks</span><span class="fdot">■</span><span>Guide · 09 Scheduled Tasks</span></div>
+</section>
+
+<!-- 33 · ANCHOR: CONFIDENCE -->
+<section class="slide dark">
+  <div class="kicker">Part 06 · Staying safe</div>
+  <div class="anchor-line">Confidence is<br>not accuracy<span class="acc">.</span></div>
+  <div><span class="timechip">10 minutes</span></div>
+</section>
+
+<!-- 34 · FOUR FAILURE MODES -->
+<section class="slide light">
+  <h2 class="big">Claude fails in four predictable ways.</h2>
+  <div class="grid g2">
+    <div class="card"><h3>It invents specifics</h3><p>Names, statistics, references and prices that sound right and don't exist. Delivered fluently, which is the dangerous part.</p></div>
+    <div class="card"><h3>It agrees with you too easily</h3><p>Frame a bad idea warmly and Claude finds merit in it. Ask it to argue against you instead.</p></div>
+    <div class="card"><h3>It fills gaps silently</h3><p>Missing information doesn't stop it. It assumes, and doesn't always say so.</p></div>
+    <div class="card"><h3>Long conversations drift</h3><p>Instructions from message five fade by message forty. You know this one already: one chat, one job.</p></div>
+  </div>
+  <div class="slidefoot"><span>06 · Staying safe</span><span class="fdot">■</span><span>Guide · 10 Where Claude Goes Wrong</span></div>
+</section>
+
+<!-- 35 · THE HABIT -->
+<section class="slide light">
+  <div class="badge guide">Guide Moment</div>
+  <h2 class="big">One habit catches most of it.</h2>
+  <p class="body">Before anything goes to a client, run the verification prompt from your guide on the draft:</p>
+  <div class="promptblock">Review the draft above as a fact-checker. List every factual claim, statistic, name and reference I should verify before this goes to a client. Then flag anywhere you were uncertain or filled a gap with an assumption rather than something I told you.</div>
+  <p class="body" style="margin-top:1.4rem;"><strong>Claude drafts, you decide.</strong> That rule never changes, no matter how good the drafts get.</p>
+  <div class="slidefoot"><span>06 · Staying safe</span><span class="fdot">■</span><span>Guide · 10 Where Claude Goes Wrong</span></div>
+</section>
+
+<!-- 36 · THE GUIDE -->
+<section class="slide stone">
+  <div class="badge guide">Guide Moment</div>
+  <h2 class="big">This session, written down.</h2>
+  <p class="body">Twelve sections, every prompt copy-ready, a checklist that tracks your progress, and a "Your First Hour" path for the moment you open it. The part numbers on these slides map straight to its sections.</p>
+  <p class="body">It lands with you today. When something in this session goes blurry next Tuesday, the answer is in there.</p>
+  <div class="slidefoot"><span>Handover</span><span class="fdot">■</span><span>Setting up Claude for Success · End User Guide</span></div>
+</section>
+
+<!-- 37 · ANCHOR: SHIP -->
+<section class="slide dark">
+  <div class="kicker">Part 07 · Your first move</div>
+  <div class="anchor-line">Ship something<br>this week<span class="acc">.</span></div>
+  <div><span class="timechip">5 minutes</span></div>
+</section>
+
+<!-- 38 · COMMITMENTS -->
+<section class="slide light">
+  <h2 class="big">Out loud. One each.</h2>
+  <p class="body">"The one thing I'll build this week is..."</p>
+  <p class="body">A Project for a real client. A skill for the task you dread. A Monday briefing that writes itself. Small is fine; finished is the point.</p>
+  <p class="body"><strong>Your team just heard you say it. That's the deadline.</strong></p>
+  <div class="slidefoot"><span>07 · Your first move</span></div>
+</section>
+
+<!-- 39 · CLOSE -->
+<section class="slide dark">
+  <div class="umark"><svg viewBox="0 0 123 104" xmlns="http://www.w3.org/2000/svg"><path d="M122.441 1.2926V62.6983H95.5301C87.9469 62.6983 81.7508 68.8943 81.7508 76.4776V103.481H-0.00012207V1.2926H40.8753V62.6058H67.879C75.4623 62.6058 81.6583 56.4097 81.6583 48.8265V1.2926H122.441Z"/></svg></div>
+  <div class="kicker">Unusual Group</div>
+  <div class="anchor-line">Scale smart.<br>Grow fast.<br>Exit strong<span class="acc">.</span></div>
+  <p class="sub">Thank you. Your guide is on its way.</p>
+</section>
+
+</div>
+
+<div class="navbtns">
+  <button onclick="nav(-1)" aria-label="Previous slide">&larr;</button>
+  <button onclick="nav(1)" aria-label="Next slide">&rarr;</button>
+</div>
+<div class="counter" id="counter"></div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+let cur = 0;
+const saved = parseInt(location.hash.replace('#','')) || parseInt(localStorage.getItem('te-deck-pos')) || 1;
+cur = Math.min(Math.max(saved - 1, 0), slides.length - 1);
+
+function show(i){
+  slides[cur].classList.remove('active');
+  cur = Math.min(Math.max(i, 0), slides.length - 1);
+  slides[cur].classList.add('active');
+  document.getElementById('prog').style.width = ((cur + 1) / slides.length * 100) + '%';
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  history.replaceState(null, '', '#' + (cur + 1));
+  localStorage.setItem('te-deck-pos', cur + 1);
+}
+function nav(d){ show(cur + d); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nav(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); nav(-1); }
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End') show(slides.length - 1);
+  if (e.key === 'f' || e.key === 'F') {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  }
+});
+let touchX = null;
+document.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+document.addEventListener('touchend', e => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 60) nav(dx < 0 ? 1 : -1);
+  touchX = null;
+});
+slides[cur].classList.add('active');
+show(cur);
+</script>
+</body>
+</html>
